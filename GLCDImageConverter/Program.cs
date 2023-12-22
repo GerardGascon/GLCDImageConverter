@@ -3,16 +3,19 @@
 namespace GLCDImageConverter;
 
 class Program {
-	static byte[]? ReadPixels(string file) {
+	static byte[]? ReadPixels(string file, out int imageWidth) {
 		Bitmap img = new(file);
 
 		if (img.Width > 128 || img.Height > 64) {
 			Console.WriteLine("ERROR: Image must be less or equal than 128x64 pixels.");
+			imageWidth = -1;
 			return null;
 		}
 
 		if (img.Height % 8 != 0) {
 			Console.WriteLine("ERROR: The image height must be a multiple of 8.");
+			imageWidth = -1;
+			return null;
 		}
         
 		byte[] pixels = new byte[img.Width * img.Height / 8];
@@ -28,20 +31,32 @@ class Program {
 			}
 		}
 
+		imageWidth = img.Width;
 		return pixels;
 	}
 
-	static void ExportImage(IReadOnlyCollection<byte>? pixels) {
+	static void ExportImage(IReadOnlyCollection<byte>? pixels, int imageWidth) {
 		if (pixels == null) {
 			Console.WriteLine("An error occurred while exporting the array.");
 			return;
 		}
+
+		const string arrayName = "bitmap";
+		
 		using StreamWriter file = File.CreateText("fileName.txt");
-		file.Write($"unsigned const char bitmap [{pixels.Count}] = {{ ");
+		file.WriteLine("#include \"GLCD.h\"\n");
+		file.Write($"unsigned const char {arrayName} [{pixels.Count}] = {{ ");
 		foreach (byte t in pixels) {
 			file.Write($"{t}, ");
 		}
-		file.WriteLine("};");
+		file.WriteLine("};\n");
+		
+		file.WriteLine("void drawImage(){");
+		file.WriteLine($"\tfor (int i = 0; i < {pixels.Count}; ++i) {{");
+		file.WriteLine($"\t\twriteByte(i / {imageWidth}, i % {imageWidth}, {arrayName}[i]);");
+		file.WriteLine("\t}");
+		file.WriteLine("}");
+		
 		file.Close();
 
 		Console.WriteLine("Image exported successfully.");
@@ -49,12 +64,12 @@ class Program {
 	
 	static void Main(string[] args) {
 		if(args.Length == 0) {
-			Console.WriteLine("No image file specified.");
+			Console.WriteLine("ERROR: No image file specified.");
 			return;
 		}
 
-		byte[]? pixels = ReadPixels(args[0]);
-		ExportImage(pixels);
+		byte[]? pixels = ReadPixels(args[0], out int imageWidth);
+		ExportImage(pixels, imageWidth);
 		
 		Console.WriteLine("Program execution completed, press any key to exit.");
 		Console.ReadKey();
