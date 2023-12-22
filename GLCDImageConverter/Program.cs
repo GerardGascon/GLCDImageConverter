@@ -6,7 +6,7 @@ class Program {
 	static byte[]? ReadPixels(string file) {
 		Bitmap img = new(file);
 
-		if (img.Width >= 128 || img.Height != 64) {
+		if (img.Width > 128 || img.Height > 64) {
 			Console.WriteLine("ERROR: Image must be less or equal than 128x64 pixels.");
 			return null;
 		}
@@ -17,7 +17,7 @@ class Program {
         
 		byte[] pixels = new byte[img.Width * img.Height / 8];
 
-		for (int i = 0; i < 8; i++) {
+		for (int i = 0; i < img.Height / 8; i++) {
 			for (int j = 0; j < img.Width; j++) {
 				byte px = 0;
 				for (int k = i * 8, l = 0; k < (i + 1) * 8; k++, l++) {
