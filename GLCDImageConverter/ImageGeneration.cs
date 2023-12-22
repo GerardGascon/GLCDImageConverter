@@ -41,7 +41,7 @@ static class ImageGeneration {
 		file.WriteLine($"#ifndef {fileName.ToUpper()}_H");
 		file.WriteLine($"#define {fileName.ToUpper()}_H");
 		
-		file.WriteLine($"void draw_{fileName}();");
+		file.WriteLine($"void draw_{fileName}(byte offset_y, byte offset_x);");
 		
 		file.WriteLine($"#endif //{fileName.ToUpper()}_H");
 		
@@ -58,9 +58,9 @@ static class ImageGeneration {
 		}
 		file.WriteLine("};\n");
 		
-		file.WriteLine($"void draw_{fileName}(){{");
+		file.WriteLine($"void draw_{fileName}(byte offset_y, byte offset_x){{");
 		file.WriteLine($"\tfor (int i = 0; i < {pixels.Count}; ++i) {{");
-		file.WriteLine($"\t\twriteByte(i / {imageWidth}, i % {imageWidth}, {fileName}[i]);");
+		file.WriteLine($"\t\twriteByte(i / {imageWidth} + offset_y, i % {imageWidth} + offset_x, {fileName}[i]);");
 		file.WriteLine("\t}");
 		file.WriteLine("}");
 		
