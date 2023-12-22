@@ -35,14 +35,23 @@ static class ImageGeneration {
 		return pixels;
 	}
 
-	public static void ExportImage(IReadOnlyCollection<byte>? pixels, string fileName, int imageWidth) {
-		if (pixels == null) {
-			Console.WriteLine("An error occurred while exporting the array.");
-			return;
-		}
+	static void ExportHFile(string fileName) {
+		using StreamWriter file = File.CreateText($"{fileName}.h");
 		
-		using StreamWriter file = File.CreateText($"{fileName}.txt");
+		file.WriteLine($"#ifndef {fileName.ToUpper()}_H");
+		file.WriteLine($"#define {fileName.ToUpper()}_H");
+		
+		file.WriteLine($"void draw_{fileName}();");
+		
+		file.WriteLine($"#endif //{fileName.ToUpper()}_H");
+		
+		file.Close();
+	}
+
+	static void ExportCFile(IReadOnlyCollection<byte> pixels, string fileName, int imageWidth) {
+		using StreamWriter file = File.CreateText($"{fileName}.c");
 		file.WriteLine("#include \"GLCD.h\"\n");
+		file.WriteLine($"#include \"{fileName}.h\"\n");
 		file.Write($"unsigned const char {fileName}[{pixels.Count}] = {{ ");
 		foreach (byte t in pixels) {
 			file.Write($"{t}, ");
@@ -56,6 +65,16 @@ static class ImageGeneration {
 		file.WriteLine("}");
 		
 		file.Close();
+	}
+
+	public static void ExportImage(IReadOnlyCollection<byte>? pixels, string fileName, int imageWidth) {
+		if (pixels == null) {
+			Console.WriteLine("An error occurred while exporting the array.");
+			return;
+		}
+		
+		ExportCFile(pixels, fileName, imageWidth);
+		ExportHFile(fileName);
 
 		Console.WriteLine("Image exported successfully.");
 	}
