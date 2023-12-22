@@ -1,8 +1,9 @@
 ﻿using System.Drawing;
+using System.Text.RegularExpressions;
 
 namespace GLCDImageConverter;
 
-class Program {
+partial class Program {
 	static byte[]? ReadPixels(string file, out int imageWidth) {
 		Bitmap img = new(file);
 
@@ -35,25 +36,23 @@ class Program {
 		return pixels;
 	}
 
-	static void ExportImage(IReadOnlyCollection<byte>? pixels, int imageWidth) {
+	static void ExportImage(IReadOnlyCollection<byte>? pixels, string fileName, int imageWidth) {
 		if (pixels == null) {
 			Console.WriteLine("An error occurred while exporting the array.");
 			return;
 		}
-
-		const string arrayName = "bitmap";
 		
-		using StreamWriter file = File.CreateText("fileName.txt");
+		using StreamWriter file = File.CreateText($"{fileName}.txt");
 		file.WriteLine("#include \"GLCD.h\"\n");
-		file.Write($"unsigned const char {arrayName} [{pixels.Count}] = {{ ");
+		file.Write($"unsigned const char {fileName}[{pixels.Count}] = {{ ");
 		foreach (byte t in pixels) {
 			file.Write($"{t}, ");
 		}
 		file.WriteLine("};\n");
 		
-		file.WriteLine("void drawImage(){");
+		file.WriteLine($"void draw_{fileName}(){{");
 		file.WriteLine($"\tfor (int i = 0; i < {pixels.Count}; ++i) {{");
-		file.WriteLine($"\t\twriteByte(i / {imageWidth}, i % {imageWidth}, {arrayName}[i]);");
+		file.WriteLine($"\t\twriteByte(i / {imageWidth}, i % {imageWidth}, {fileName}[i]);");
 		file.WriteLine("\t}");
 		file.WriteLine("}");
 		
@@ -65,13 +64,25 @@ class Program {
 	static void Main(string[] args) {
 		if(args.Length == 0) {
 			Console.WriteLine("ERROR: No image file specified.");
+			Console.ReadKey();
+			return;
+		}
+
+		string fileName = Path.GetFileNameWithoutExtension(args[0]);
+		Regex variableCheck = MyRegex();
+		if (!variableCheck.IsMatch(fileName)) {
+			Console.WriteLine("ERROR: File name is not a valid C variable name.");
+			Console.ReadKey();
 			return;
 		}
 
 		byte[]? pixels = ReadPixels(args[0], out int imageWidth);
-		ExportImage(pixels, imageWidth);
+		ExportImage(pixels, fileName, imageWidth);
 		
 		Console.WriteLine("Program execution completed, press any key to exit.");
 		Console.ReadKey();
 	}
+
+    [GeneratedRegex("^[a-zA-Z_$][\\w$]*$")]
+    private static partial Regex MyRegex();
 }
