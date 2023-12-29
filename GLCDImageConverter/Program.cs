@@ -10,21 +10,23 @@ partial class Program {
 			return;
 		}
 
-		string fileName = Path.GetFileNameWithoutExtension(args[0]);
-		Regex variableCheck = MyRegex();
-		if (!variableCheck.IsMatch(fileName)) {
-			Console.WriteLine("ERROR: File name is not a valid C variable name.");
-			Console.ReadKey();
-			return;
+		foreach (string file in args) {
+			string fileName = Path.GetFileNameWithoutExtension(file);
+			Regex variableCheck = C_CompatibleVariable();
+			if (!variableCheck.IsMatch(fileName)) {
+				Console.WriteLine($"ERROR: File name of '{fileName}' is not a valid C variable name.");
+				Console.ReadKey();
+				return;
+			}
+			
+			byte[]? pixels = ImageGeneration.ReadPixels(file, out int imageWidth);
+			ImageGeneration.ExportImage(pixels, fileName, imageWidth);
 		}
-
-		byte[]? pixels = ImageGeneration.ReadPixels(args[0], out int imageWidth);
-		ImageGeneration.ExportImage(pixels, fileName, imageWidth);
 		
 		Console.WriteLine("Program execution completed, press any key to exit.");
 		Console.ReadKey();
 	}
 
     [GeneratedRegex("^[a-zA-Z_$][\\w$]*$")]
-    private static partial Regex MyRegex();
+    private static partial Regex C_CompatibleVariable();
 }
