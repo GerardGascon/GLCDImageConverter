@@ -69,13 +69,13 @@ static class ImageGeneration {
 
 	public static void ExportImage(IReadOnlyCollection<byte>? pixels, string fileName, int imageWidth) {
 		if (pixels == null) {
-			Console.WriteLine("An error occurred while exporting the array.");
+			Console.WriteLine($"An error occurred while exporting the array. ({fileName})");
 			return;
 		}
 		
 		ExportCFile(pixels, fileName, imageWidth);
 		ExportHFile(fileName);
 
-		Console.WriteLine("Image exported successfully.");
+		Console.WriteLine($"Image exported successfully. ({fileName})");
 	}
 }
