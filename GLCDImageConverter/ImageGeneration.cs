@@ -34,22 +34,13 @@ static class ImageGeneration {
 		imageWidth = img.Width;
 		return pixels;
 	}
-
-	static void ExportHFile(string fileName) {
+	
+	static void ExportFile(IReadOnlyCollection<byte> pixels, string fileName, int imageWidth) {
 		using StreamWriter file = File.CreateText($"{fileName}.h");
 		
 		file.WriteLine($"#ifndef {fileName.ToUpper()}_H");
 		file.WriteLine($"#define {fileName.ToUpper()}_H");
 		
-		file.WriteLine($"void draw_{fileName}(byte offset_y, byte offset_x);");
-		
-		file.WriteLine($"#endif //{fileName.ToUpper()}_H");
-		
-		file.Close();
-	}
-
-	static void ExportCFile(IReadOnlyCollection<byte> pixels, string fileName, int imageWidth) {
-		using StreamWriter file = File.CreateText($"{fileName}.c");
 		file.WriteLine("#include \"GLCD.h\"\n");
 		file.WriteLine($"#include \"{fileName}.h\"\n");
 		file.Write($"unsigned const char {fileName}[{pixels.Count}] = {{ ");
@@ -64,6 +55,8 @@ static class ImageGeneration {
 		file.WriteLine("\t}");
 		file.WriteLine("}");
 		
+		file.WriteLine($"#endif //{fileName.ToUpper()}_H");
+		
 		file.Close();
 	}
 
@@ -73,8 +66,7 @@ static class ImageGeneration {
 			return;
 		}
 		
-		ExportCFile(pixels, fileName, imageWidth);
-		ExportHFile(fileName);
+		ExportFile(pixels, fileName, imageWidth);
 
 		Console.WriteLine($"Image exported successfully. ({fileName})");
 	}
